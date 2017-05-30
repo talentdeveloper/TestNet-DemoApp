@@ -16,7 +16,7 @@
         }
     
         // @notice a contract which is inherited by 
-        // main Association contract. owned holds several housekeeping functions 
+        // main myBit contract. owned holds several housekeeping functions 
         contract owned {
             address public owner;
     
@@ -47,8 +47,8 @@
         }
     
     
-        /// @dev Liquid Democracy contract. Allows new members to be registered and 
-        /// aquire tokens. Number of acquired tokens also represents user voting power. 
+        /// @dev MyBit contract. Allows new members to be registered and 
+        /// aquire tokens.
         /// Tokens are held in standard token contract defined here. 
         contract myBit is owned {
     
@@ -117,7 +117,7 @@
            
            
             
-            /* modifier that allows only shareholders to participate in auction */
+            /* modifier that allows only shareholders to participate in transactions*/
             modifier onlyShareholders() {
                 if (sharesTokenAddress.balanceOf(msg.sender) == 0) throw;
                     _;
@@ -133,7 +133,10 @@
                 
             }
             
-            
+            /// @dev facilitates linking assetes with the company
+            /// @param member - user representing project
+            /// @param asset - asset to link.
+            /// @return bool - true if executed
             function linkMemberAsset(address member, uint asset) returns (bool) {
                 
                 
