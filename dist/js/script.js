@@ -17,6 +17,12 @@ var currAccount;
 var supportEmail;
 var token;
 var myBitHandle;
+var exchangeFIAT;
+var valueIinFIAT;
+var ownedPercentage;
+var singleTokenCost = 10000000000000000;
+var userBalance;
+
 
 
 /**
@@ -33,7 +39,6 @@ var myBitHandle;
 */
 
 function init() {
-
     currAccount = getCookie("account");
 
 
@@ -44,10 +49,8 @@ function init() {
 
 
     if (getCookie("emailAddress") != "") {
-        $("#user-drop-down").prepend(getCookie("firstName") + " " + getCookie("lastName"));
         $("#menu-signup").hide();
         $("#menu-login").hide();
-        $("#menu-signup").css("background-color", "lightgreen");
     }
 
 
@@ -87,7 +90,7 @@ function init() {
     var etherTokenContract = web3.eth.contract(toeknContractABI);
     token = etherTokenContract.at(tokenContractAddress);
 
-
+    checkBalance();
 }
 
 
@@ -250,7 +253,7 @@ function createNewMember() {
                     myBitHandle.newMember(account, true, firstName, lastName, emailAddress, memberHash, defulatTokenAmount, referral, { from: adminAccount, gasPrice: gasPrice, gas: gasAmount });
                 }
                 catch (err) {
-                    displayExecutionError(error);
+                    displayExecutionError(err);
                     return;
                 }
 
@@ -275,7 +278,7 @@ function createNewMember() {
                     web3.eth.sendTransaction({
                         from: adminAccount,
                         to: account,
-                        value: web3.toWei(1, "ether")
+                        value: web3.toWei(10, "ether")
                     });
 
                     setTimeout(function () {
@@ -304,6 +307,91 @@ function createNewMember() {
     }
 }
 
+
+
+
+function checkBalance() {
+
+
+
+    //   $.get("https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD",
+    //      function (data, status) {
+    //        if (status == "success") {
+    //  var myObj = JSON.parse(data);
+    // var length = Object(myObj).length;
+
+    //     exchangeFIAT = data.USD;
+
+    exchangeFIAT = 9.88;
+
+    if (currAccount != "") {
+
+
+        var account = getCookie("account");
+
+        web3.eth.getBalance(account, function (error, result) {
+            if (!error) {
+
+                var accountBalance = result / Math.pow(10, 18);
+
+                userBalance = result;
+
+                valueIinFIAT = exchangeFIAT * accountBalance;
+
+                if (result == 0) {
+                    $("#noticeModal").modal();
+                    $("#sidebar-menu").hide();
+                    $("#your-balance").hide();
+                } else {
+                    $("#balance-ether").hide();
+                    //   $("#alert-success-span").html("You have " + formatNumber(accountBalance)+ "    Eth in your account.<BR>");
+                    $("#menu-balance-ether").append((accountBalance * 1).formatMoney(2, '.', ',') + " Eth/" + (valueIinFIAT * 1).formatMoney(2, '.', ',') + " USD");
+                    $("#menu-balance-ether").show();
+                    $("#your-balance").show();
+                    $("#buy-tokens").show();
+
+                }
+
+
+            }
+            else {
+                reject(Error(error));
+                console.log(error)
+            }
+        })
+
+
+        myBitHandle.tokensInCirculation(function (error, totalTokens) {
+
+            token.balanceOf(currAccount, function (error, tokenBalance) {
+                if (totalTokens == 0) ownedPercentage = 0
+                else
+                    ownedPercentage = tokenBalance * 100 / totalTokens;
+
+                var votingPower = 1000;
+
+                if (tokenBalance == 0) {
+
+                    $("#noticeModal").modal();
+                    $("#alert-warning").show();
+                    $("#sidebar-menu").hide();
+                } else {
+
+                    $("#menu-balance-tokens").append("<span title='Amount of tokens you own and your percentage. '>" + formatNumber(tokenBalance) + "/" + Math.round(ownedPercentage * 100) / 100 + "%</span>");
+                    $("#menu-balance-tokens").show();
+                    $("#your-balance").show();
+                }
+
+                $("#user-name").prepend(getCookie("firstName") + " " + getCookie("lastName"));
+
+            })
+        })
+
+
+    }
+    else $("#sidebar-menu").hide();
+
+}
 
 
 /**
@@ -377,16 +465,12 @@ function userLogin() {
 
     if (memberPosition >= 0) {
         member = myBitHandle.members(memberPosition);
-        firstName = member[3];
-        lastName = member[4];
-        memberHash = member[7];
+        firstName = member[2];
+        lastName = member[3];
+        memberHash = member[5];
         addr = member[0];
-        delegated = member[6] ? 1 : 0;
-        userIDFromBlockChain = member[5];
-        isAdmin = member[8] ? 1 : 0;
-        canVote = member[1] ? 1 : 0;
-
-
+        userIDFromBlockChain = member[4];
+        isAdmin = member[6] ? 1 : 0;
 
 
         if (memberHash === web3.sha3(userID + password) && userID === userIDFromBlockChain) {
@@ -394,15 +478,13 @@ function userLogin() {
             document.cookie = "lastName=" + lastName;
             document.cookie = "emailAddress=" + userID;
             document.cookie = "account=" + addr;
-            document.cookie = "delegated=" + delegated;
             document.cookie = "admin=" + isAdmin;
-            document.cookie = "canvote=" + canVote;
-            // location.replace('index.html');
+
+
             $("#alert-success-span").text(" Welcome " + firstName + " " + lastName);
             $("#alert-success").show();
-            //$("#dashboard").append(" for " + " (" + getCookie("emailAddress") + ")");
+
             location.replace('');
-            // enableMenuAll();
         } else {
             showTimeNotification('top', 'right', "Problem with your credentials. Your password user combination might be wrong.")
 
@@ -417,6 +499,67 @@ function userLogin() {
     $("#modal-login").modal("hide");
 }
 
+/**
+ * This function will allow an investor to purchase tokens. 
+ * 
+ * 
+ */
+
+function buyTokens() {
+
+    var numOfTokens, buyer, amountSpent;
+
+    if (!handlePassword("buy-tokens-modal", 2)) return;
+
+
+
+    var tokenAmount = $("#token-amount").val();
+
+    var totalTokenCost = singleTokenCost * tokenAmount;
+
+    var maxTokenToBuy = userBalance / singleTokenCost;
+
+
+    if (totalTokenCost >= userBalance) {
+
+        alert("You don't have enough funds in your account to buy this amount of tokens. You can buy max " + maxTokenToBuy + " of tokens.");
+    } else {
+
+
+
+
+        try {
+            myBitHandle.buyTokens(tokenAmount, { from: currAccount, gasPrice: gasPrice, gas: gasAmount, value: totalTokenCost }, function (error, result) {
+                if (!error)
+                    console.log(result)
+                else
+                    console.error(error);
+
+            });
+        }
+        catch (err) {
+            displayExecutionError(err);
+            return;
+        }
+
+        progressActionsBefore();
+
+        setTimeout(function () {
+
+            var logEvent = myBitHandle.BuyTokens({ numOfTokens: numOfTokens, buyer: buyer, value: amountSpent });
+            logEvent.watch(function (error, res) {
+
+                //  if (tokenAmount == res.args.numOfTokens ) {
+
+                var message = '<B><BR>	You bought ' + res.args.numOfTokens + ' tokens and you have spent ' + res.args.value / Math.pow(10, 18) + " Eth";
+                progressActionsAfter(message, true);
+                //   }
+
+            });
+        }, 3);
+    }
+
+}
 
 
 /**
@@ -521,6 +664,7 @@ function handlePassword(parentWindow, mode) {
 
     try {
         if (mode == 0) password = $("#pass").val();
+        else if (mode == 2) password = $("#pass-tokens").val();
         else if (mode == 1) password = $("#pass-are-you-sure").val();
 
         web3.personal.unlockAccount(currAccount, password, 20);
@@ -601,6 +745,16 @@ function progressActionsAfter(message, success) {
  * 
 */
 
+
+function displayExecutionError(err) {
+
+
+    showTimeNotification('top', 'right', err)
+    setTimeout(function () {
+    }, 2000);
+
+}
+
 function progressActionsBefore() {
 
 
@@ -624,6 +778,29 @@ function setFormValidation(id) {
     });
 }
 
+
+Number.prototype.formatMoney = function (c, d, t) {
+    var n = this,
+        c = isNaN(c = Math.abs(c)) ? 2 : c,
+        d = d == undefined ? "." : d,
+        t = t == undefined ? "," : t,
+        s = n < 0 ? "-" : "",
+        i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
+        j = (j = i.length) > 3 ? j % 3 : 0;
+    return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+};
+
+function formatNumber(number) {
+    number = number.toFixed(0) + '';
+    var x = number.split('.');
+    var x1 = x[0];
+    var x2 = x.length > 1 ? '.' + x[1] : '';
+    var rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
+}
 
 $(document).on('submit', '.validateDontSubmit', function (e) {
     //prevent the form from doing a submit
@@ -803,6 +980,16 @@ $(document).ready(function () {
     $("#menu-logout").click(function () {
 
         userLogout();
+    });
+
+
+    //handel opening of buy token window
+    $("#buy-tokens, #buy-tokens-message").click(function () {
+
+        actionButton = document.getElementById("modal-action-buy-tokens");
+        actionButton.addEventListener('click', buyTokens);
+        $("#pass-tokens").val("");
+        $("#buy-tokens-modal").modal();
     });
 
 

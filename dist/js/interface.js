@@ -13,7 +13,9 @@ var organizationName = "MyBit";
 //var nodejsUrl = "http://184.68.74.253:8081/process_get";
 var nodejsUrl = "http://localhost:8081/process_get";
 var tokenContractAddress = "0xD0cCF0ea3015d7EC28D110844562D8f65C0e47a2";
-var myBitAddress = "0x4A2e83c00a555B4Cd483520AD12c99f5480a11e5";
+
+var myBitAddress = "0xbAD6CB007131a5931d05A2930bAd1EF5C3bc0D61";
+
 var domain = "";
 var linkAfterSignup = "../pages/index.html";
 var defulatTokenAmount = 400;
