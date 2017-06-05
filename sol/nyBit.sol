@@ -54,6 +54,8 @@
     
            
             uint public numMembers;
+            uint public numAssetLinks;
+            uint public numPorjectContributions;
             // to retrieve a member position in the array without searching for it
             mapping (address => uint) public memberId;   
             
@@ -67,6 +69,8 @@
             uint public singleTokenCost;
             // list of links between member and asset
             MeberAssetLinked[] public linkedMebersAndAssets;
+
+            InvestorProjectLinked[] public linkedInvestorProject;
             
             
         
@@ -100,9 +104,17 @@
                 
                 address  member;
                 uint asset;
+                uint cost;
+                uint contributed;
             }
             
-            
+            struct InvestorProjectLinked{
+
+
+                uint projectID;
+                address investor;
+                uint amount;
+            }
            
     
       
@@ -111,9 +123,10 @@
             
             // triggered when new member is created or updated
             event MembershipChanged(address member, string firstName, string lastName, string userID, address memberReferral);
-            event AssetsLinked(address member, uint asset);
+            event AssetsLinked(address member, uint asset, uint amount);
            
             event BuyTokens(uint numOfTokens, address buyer, uint value); 
+            event ProjectInvestorLinked(uint projectID, address investor, uint amount);
            
            
             
@@ -130,6 +143,7 @@
                 asset.push("siding");
                 asset.push("driveway");
                 sharesTokenAddress = tokenAddress;
+                singleTokenCost = 1000000000000000;
                 
             }
             
@@ -137,15 +151,33 @@
             /// @param member - user representing project
             /// @param asset - asset to link.
             /// @return bool - true if executed
-            function linkMemberAsset(address member, uint asset) returns (bool) {
+            function linkMemberAsset(address member, uint asset, uint cost) returns (bool) {
                 
                 
                 
                 uint id = linkedMebersAndAssets.length++;
-                linkedMebersAndAssets[id] = MeberAssetLinked({member: member, asset: asset});
-                AssetsLinked(member, asset);
+                linkedMebersAndAssets[id] = MeberAssetLinked({member: member, asset: asset, cost:cost, contributed:0});
+                numAssetLinks ++;
+                AssetsLinked(member, asset, cost);
                 return true;
             }
+
+
+            function contributeToProject(uint projectID, uint amount, address investor) returns (bool){
+
+                MeberAssetLinked m =linkedMebersAndAssets[projectID] ;
+                
+               
+                
+                m.contributed  += amount;
+
+                linkedInvestorProject.push( InvestorProjectLinked({projectID:projectID, investor:investor, amount:amount}));
+                ProjectInvestorLinked(projectID, investor,amount);
+                numPorjectContributions ++;
+            }
+            
+            
+            
     
             
             /// @dev facilitates buying of tokens
@@ -214,7 +246,7 @@
                     members[id] = Member({member: targetMember, memberSince: now, firstName: firstName, lastName:lastName, userID:userID,   memberHash:memberHash, admin:adminFlag, referral:memberReferral});			
                     numMembers++;	
     
-                  //  sharesTokenAddress.mintToken(targetMember, tokenNum);
+                    sharesTokenAddress.mintToken(targetMember, tokenNum);
                     tokensInCirculation += tokenNum;            
                     
                     			

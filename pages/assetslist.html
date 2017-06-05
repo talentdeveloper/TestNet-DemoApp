@@ -53,13 +53,13 @@
                     </div>
                 </div>
                 <ul class="nav">
-                    <li class="active">
+                    <li>
                         <a href="./index.html">
                             <i class="material-icons">dashboard</i>
                             <p>Dashboard</p>
                         </a>
                     </li>
-                     <li>
+                     <li class="active">
                         <a href="./assetslist.html">
                             <i class="material-icons">image</i>
                             <p>Assets List</p>
@@ -95,7 +95,13 @@
                                     <p class="hidden-lg hidden-md">Dashboard</p>
                                 </a>
                                 
-                            </li>                            
+                            </li>
+
+                            
+         
+
+  
+
                             <li><a id="menu-signup" href="#"><i class="material-icons">vpn_key</i>Sign Up</a></li>
                             <li><a id="menu-login" href="#"><i class="material-icons">lock_open</i>Login</a></li>
                
@@ -136,104 +142,18 @@
                                     <i class="material-icons ">language</i>
                                 </div>
                                 <div class="card-content ">
-                                    <h4 class="card-title ">Choose Asset to Register                                      
+                                    <h4 class="card-title ">Choose Asset to Invest                                      
                                     </h4>
                                     <div class="row ">
-                                        <div class="col-md-8 ">
+                                        <div class="col-md-10 ">
                                             <div class="table-responsive table-sales ">
+                                                
                                                 <table class="table ">
-                                                    <tbody>
-                                                        
-                                                        <tr>
-                                                            <td>
-                                                                <div>
-                                                                    <img  style="height: 100px; width: 150px " src="../assets/img/roofsolar-panels.jpg">
-                                                                </div>
-                                                            </td>
-                                                            <td>
-                                                                <div class="input-group ">
-                                                                    <span class="input-group-addon ">
-                                                                        <i class="material-icons "><money></money></i>
-                                                                    </span>
-						                                            <div class="form-group label-floating ">
-							                                        <label class="control-label ">
-                                                                        Projct cost (ETH)
-                                                                        <small>(required)</small>
-                                                                    </label>
-							                                        <input class="form-control " id="cost-roof" name="cost" type="text" required="true " data-error="Bruh,
-                                                                    that amount is invalid "
-							                                            />
-						                                            </div>
-                                                                </div>
-                                                            </td>
-                                                            <td>                                                                
-                                                                <button class="btn btn-success btn-round " id="register-roof">
-                                                                <i class="material-icons ">shop_two</i> Register Roof Solar Panels
-                                                                <div class="ripple-container "></div></button>
-                                                               </td>
-                                                            
-                                                        </tr>
-                                                        <tr>
-                                                            <td>
-                                                                <div>
-                                                                    <img style="height: 100px; width: 150px " src="../assets/img/siding-panels.jpg">
-                                                                </div>
-                                                            </td>
-                                                            <td>
-                                                                <div class="input-group ">
-                                                                    <span class="input-group-addon ">
-                                                                        <i class="material-icons "><money></money></i>
-                                                                    </span>
-						                                            <div class="form-group label-floating ">
-							                                        <label class="control-label ">
-                                                                        Projct cost (ETH)
-                                                                        <small>(required)</small>
-                                                                    </label>
-							                                        <input class="form-control " id="cost-siding" name="cost" type="text" required="true " data-error="Bruh,
-                                                                    that amount is invalid "
-							                                            />
-						                                            </div>
-                                                                </div>
-                                                            </td>
-                                                            <td> 
-                                                                 <button class="btn btn-success btn-round " id="register-siding">
-                                                                <i class="material-icons ">shop_two</i> Register Siding Solar Panels
-                                                                <div class="ripple-container "></div></button>
-                                                            </td>
-                                                            
-                                                        </tr>
-                                                        <tr>
-                                                            <td>
-                                                                <div >
-                                                                    <img  style="height: 100px; width: 150px " src="../assets/img/driveway-panels.jpg">
-                                                                </div>
-                                                            </td>
-                                                            <td>
-                                                                <div class="input-group ">
-                                                                    <span class="input-group-addon ">
-                                                                        <i class="material-icons "><money></money></i>
-                                                                    </span>
-						                                            <div class="form-group label-floating ">
-							                                        <label class="control-label ">
-                                                                        Projct cost (ETH)
-                                                                        <small>(required)</small>
-                                                                    </label>
-							                                        <input class="form-control " id="cost-drivawy" name="cost" type="text" required="true " data-error="Bruh,
-                                                                    that amount is invalid "
-							                                            />
-						                                            </div>
-                                                                </div>
-                                                            </td>
-                                                            <td>
-                                                                 <button class="btn btn-success btn-round " id="register-driveway">
-                                                                <i class="material-icons ">shop_two</i> Driveway Solar panels
-                                                                <div class="ripple-container "></div></button>
-                                                            </td>
-                                                            
-                                                        </tr>
-                                                                                                         
+                                                    <tbody id="assets-list">
+                                                                                                     
                                                     </tbody>
                                                 </table>
+                                                
                                             </div>
                                         </div>                                       
                                     </div>

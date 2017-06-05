@@ -68,8 +68,8 @@ app.post('/process_get', function (req, res) {
 
   console.log("Password passed: " + req.body.password);
   var keythereum = require("keythereum");
-  //var path = "/home/bogdan/Ethereum/privateTestnet/keystore";
-  var path = "/home/bogdan/.ethereum/testnet/keystore/";
+  var path = "/home/bogdan/Ethereum/privateTestnet/keystore";
+  //var path = "/home/bogdan/.ethereum/testnet/keystore/";
 
   var dk = keythereum.create();
   var keyObject = keythereum.dump(req.body.password, dk.privateKey, dk.salt, dk.iv);
@@ -78,7 +78,7 @@ app.post('/process_get', function (req, res) {
   console.log(keyObject.address);
   console.log("Password " + req.body.password);
 
-  web3.personal.unlockAccount(adminAddress, adminPassword, 30);
+ // web3.personal.unlockAccount(adminAddress, adminPassword, 30);
 
   console.log("Admin account unlocked");
   res.end(keyObject.address);

@@ -91,6 +91,7 @@ function init() {
     token = etherTokenContract.at(tokenContractAddress);
 
     checkBalance();
+    displayAssets();
 }
 
 
@@ -610,9 +611,10 @@ function displayExecutionError(err) {
 
 function registerAsset() {
 
-    var asset, member;
+    var asset, member, cost;
 
     var assetSelected = $("#parm1").val();
+    var cost = $("#parm2").val();
 
     if (!handlePassword("areYouSure", 1)) return;
 
@@ -620,9 +622,9 @@ function registerAsset() {
 
     setTimeout(function () {
 
-        myBitHandle.linkMemberAsset(currAccount, assetSelected, { from: currAccount, gasPrice: gasPrice, gas: gasAmount });
+        myBitHandle.linkMemberAsset(currAccount, assetSelected, cost , { from: currAccount, gasPrice: gasPrice, gas: gasAmount });
 
-        var logAssetLinked = myBitHandle.AssetsLinked({ member: member, asset: asset });
+        var logAssetLinked = myBitHandle.AssetsLinked({ member: member, asset: asset, cost:cost });
 
         logAssetLinked.watch(function (error, res) {
 
@@ -646,6 +648,125 @@ function registerAsset() {
 
 }
 
+
+/**
+ * This function will launch password window to register contributoion for the project. 
+ * 
+ * @method handleInvestAsset 
+ * @param projectID {integer}
+ * 
+*/
+
+function handleInvestAsset(projectID){
+
+    actionButton = document.getElementById("modal-action-areyousure");
+    actionButton.addEventListener('click', investAsset);
+
+    $("#sure-mesasge").text("This action will invest your contribution in the selected project,, are you sure?");
+    $("#are-you-sure-title").text("Invest in this project")
+    $("#modal-action-areyousure").text("Invest in project")
+    $("#pass-are-you-sure").val("");
+    $("#parm1").val(projectID);  
+    $("#areYouSure").modal();
+
+
+
+}
+
+/**
+ * This function will interact with the blockchain to register contribution to investemnt.  
+ * 
+ * @method investAsset 
+ * @param projectID {integer}
+ * 
+*/
+function investAsset() {
+
+    var asset, member, cost;
+
+    var projectID = $("#parm1").val();
+    var cost = $("#cost" + projectID).val();
+
+    if (!handlePassword("areYouSure", 1)) return;
+
+    progressActionsBefore();
+
+    setTimeout(function () {
+
+        myBitHandle.contributeToProject(projectID, cost, currAccount , { from: currAccount, gasPrice: gasPrice, gas: gasAmount });
+
+        var ProjectInvestorLinked = myBitHandle.ProjectInvestorLinked({ projectID: projectID, currAccount: asset, amount:cost });
+
+        ProjectInvestorLinked.watch(function (error, res) {           
+
+
+            message =  "You have invested  in project NO: " + projectID + " amount of " + cost + " ETH";
+            progressActionsAfter(message, true);
+        });
+    }, 10);
+
+
+}
+
+
+/**
+ * This function will dispay assets and their investment status.   
+ * 
+ * @method displayAssets 
+ * @param projectID {integer}
+ * 
+*/
+
+function displayAssets(){
+
+    var image,  buyAmount;
+
+   var numberAssetsLinked = myBitHandle.numAssetLinks();
+
+     $("#assets-list").append('<tr id="header"><th>Asset</th><th>Cost</th><th>Contributed</th><th class="text-center">Your Contribution</th><th class="text-center"></th></tr>' );
+
+    for (var i=0; i<numberAssetsLinked; i++){
+
+           var linkedAssets =  myBitHandle.linkedMebersAndAssets(i)
+   
+            if (linkedAssets[1] == 0) {
+
+                image = "roofsolar-panels.jpg"  ;
+                buyAmount = "cost-roof";
+            }
+            else if(linkedAssets[1] == 1){
+                image = "siding-panels.jpg";
+                buyAmount = "cost-siding";
+            }
+            else {
+                 image = "driveway-panels.jpg";
+                buyAmount = "cost-driveway";
+            }
+
+                
+            
+
+            var row = '<tr><td><div><img  style="height: 100px; width: 150px " src="../assets/img/' + image +' "></div></td>' +
+                      '<td>' + linkedAssets[2] + ' ETH</td>' +
+                      '<td>' + linkedAssets[3] + ' ETH</td>' +
+                      '<td><div class="input-group "><span class="input-group-addon "><i class="material-icons "><money></money></i>' +
+                      '</span><div class="form-group label-floating "><label class="control-label ">Contributed amount  (ETH)<small>(required)</small>' +
+                      '</label><input class="form-control" id="cost'+i +'"  type="text" required="true " data-error="Bruh, that amount is invalid "' +
+					  '/></div></div></td> <td><button class="btn btn-success btn-round " id="register'+i+'" onclick="handleInvestAsset('+i+')"><i class="material-icons ">' +
+                      'shop_two</i> Invest in this project"ls<div class="ripple-container "></div></button></td></tr>'
+
+          $("#assets-list").append(row);   
+          $("#cost" + i).val("");
+          //$("#" +buyAmount ).data("changed",true);
+
+         
+
+
+    }
+
+
+
+}
 
 
 /**
@@ -869,9 +990,11 @@ $("#register-roof").click(function () {
     $("#modal-action-areyousure").text("Register Asset")
     $("#pass-are-you-sure").val("");
     $("#parm1").val(0);
+    $("#parm2").val($("#cost-roof").val());
     $("#areYouSure").modal();
 
 });
+
 
 
 
@@ -889,6 +1012,7 @@ $("#register-siding").click(function () {
     $("#modal-action-areyousure").text("Register Asset")
     $("#pass-are-you-sure").val("");
     $("#parm1").val(1);
+    $("#parm2").val($("#cost-siding").val());
     $("#areYouSure").modal();
 
 });
@@ -903,11 +1027,27 @@ $("#register-driveway").click(function () {
     $("#modal-action-areyousure").text("Register Asset")
     $("#pass-are-you-sure").val("");
     $("#parm1").val(2);
+    $("#parm2").val($("#cost-drivawy").val());
     $("#areYouSure").modal();
 
 });
 
 
+
+$("#register-driveway").click(function () {
+
+    actionButton = document.getElementById("modal-action-areyousure");
+    actionButton.addEventListener('click', registerAsset);
+
+    $("#sure-mesasge").text("This action will register new asset, are you sure?");
+    $("#are-you-sure-title").text("Register Asset")
+    $("#modal-action-areyousure").text("Register Asset")
+    $("#pass-are-you-sure").val("");
+    $("#parm1").val(2);
+    $("#parm2").val($("#cost-drivawy").val());
+    $("#areYouSure").modal();
+
+});
 
 
 
