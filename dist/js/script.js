@@ -1,6 +1,6 @@
 "use strict";
 
-var userAccount, canVote, firstName, lastName, userID, actionButton;
+var userAccount, canVote, firstName, lastName, userID, actionButton, totalTokens;
 
 
 
@@ -22,6 +22,7 @@ var valueIinFIAT;
 var ownedPercentage;
 var singleTokenCost = 10000000000000000;
 var userBalance;
+
 
 
 
@@ -91,7 +92,106 @@ function init() {
     token = etherTokenContract.at(tokenContractAddress);
 
     checkBalance();
-    displayAssets();
+
+      setTimeout(function () {
+            renderPage();
+      }, 1000);
+}
+
+
+
+
+function renderPage() {
+
+
+    if (window.location.href.indexOf("wallet.html") > 0) renderWallet();
+    else if (window.location.href.indexOf("assetslist.html") > 0) displayAssets();
+    else if (window.location.href.indexOf("profit.html") > 0) displayAssetsProfit();
+    
+
+}
+
+
+
+function renderWallet() {
+
+
+    //  var numProposals = ldHandle.numProposals();
+    var tokensCommitedByMember = myBitHandle.returnWorkingTokensForMember(currAccount);
+    var tokensCommted
+    var tokensAllocated = tokensCommitedByMember[0] - tokensCommitedByMember[1];
+    var totalAllocatedTokens = myBitHandle.totalLockedTokens();
+    var availableTokens = 0;
+    var tokenPrice = myBitHandle.singleTokenCost();
+
+    var tokenPriceETH = tokenPrice / 1000000000000000000;
+
+     var rewards = myBitHandle.returnRewardsForInvestor(currAccount);
+
+
+
+
+
+
+    //   for (var i = 0; i < numProposals; i++) {
+
+    //       tokensCommitedByMember += Number(myBitHandle.returnTokenNoForProjectAndMember(i, getCookie("account")));
+    //   }
+
+    // var totalEth = Math.round(myBitHandle.tokensInCirculation() / 1000);
+    var totalEth = web3.fromWei(web3.eth.getBalance(myBitAddress), "ether").round(2);
+    var totalEthAllocated = Math.round(totalAllocatedTokens * tokenPriceETH);
+    var yourEther = web3.fromWei(web3.eth.getBalance(currAccount), "ether").round(2);
+    var yourAllocatedEther = Math.round(tokensAllocated* tokenPriceETH);
+    var yourAvailableEther = Math.round(yourEther - yourAllocatedEther);
+    var tokenBalance = token.balanceOf(currAccount);
+    var yourEtherInTokens = tokenBalance * tokenPriceETH;
+    availableTokens = tokenBalance - tokensAllocated;
+    //  var yourInvestedEther = tokenBalance /
+   
+
+
+
+
+
+    $("#token-price").html(tokenPriceETH + " ETH/Token<BR>You have " + formatNumber(tokenBalance) + " tokens")
+    $("#eth-price").html(exchangeFIAT + " USD/ETH<BR>You have " + (yourEther * 1).formatMoney(2, '.', ',') + " Eth ")
+
+
+    $("#token-amount-stats").html("<B>Total circulation: </B>" + formatNumber(totalTokens) +
+        "<BR><B>Total allocated tokens: </B>" + formatNumber(totalAllocatedTokens) + "<HR>" +
+        "<B>Your portion: </B>" + formatNumber(tokenBalance) +
+        "<BR><B>Your percentage: </B>" + Math.round(ownedPercentage * 100) / 100 + "%" +
+        "<BR><B>Your Allocated Tokens: </B>" + formatNumber(tokensAllocated) +
+        "<BR><B>Your Available Tokens: </B>" + formatNumber(availableTokens));
+
+
+
+    $("#ether-usd-amount").html("Ξ" + (totalEth * 1).formatMoney(2, '.', ',') + "/$" + (totalEth * exchangeFIAT).formatMoney(2, '.', ',') +
+        "<BR>Ξ" + (totalEthAllocated).formatMoney(2, '.', ',') + "/$" + (totalEthAllocated * exchangeFIAT).formatMoney(2, '.', ',') + "<HR>" +
+        "Ξ" + (yourEtherInTokens).formatMoney(2, '.', ',') + "/$" + (yourEtherInTokens * exchangeFIAT).formatMoney(2, '.', ',') +
+        "<BR>" + Math.round(ownedPercentage * 100) / 100 + "%" +
+        "<BR>Ξ" + (yourAllocatedEther).formatMoney(2, '.', ',') + "/$" + (yourAllocatedEther * exchangeFIAT).formatMoney(2, '.', ',') +
+        "<BR>Ξ" + (yourAvailableEther).formatMoney(2, '.', ',') + "/$" + (yourAvailableEther * exchangeFIAT).formatMoney(2, '.', ','));
+
+
+//    var totalrewards =  myBitHandle.totalRewardTokens();
+ //   var totalRewardsPending = myBitHandle.toalPendingRewardTokens();
+    var rewardBalance = tokensCommitedByMember[2] ;
+    var rewardPorjected = "Ξ0"
+    var rewardRedeem = "Ξ0"
+
+    
+
+    $("#reward-amount").html("<b>Your total rewards: </b>" + formatNumber(rewards) + " tokens.") ;
+
+  //  $("#reward-amount").html("<B>Total rewards: </B>" + formatNumber(totalrewards) + "/" + (totalrewards * tokenPriceETH).formatMoney(2, '.', ',')  + " Ξ" +         
+   //     "<br><b>Total rewards pending: </b>" + formatNumber(totalRewardsPending) +  "/" + (totalRewardsPending * tokenPriceETH).formatMoney(2, '.', ',')  + " Ξ" +
+  //      "<hr><B>Your percentage: </B>" + parseFloat(Math.round(rewardBalance * 100)/  totalrewards).toFixed(2) + "%" +   
+ //       "<br><B>Your portion: </B>" + formatNumber(rewardBalance) + "/" + (rewardBalance * tokenPriceETH).formatMoney(2, '.', ',')  + " Ξ"  +             
+  //  "<br><B>Your rewards pending: </B>" + formatNumber(tokensCommitedByMember[3]) + "/" + (tokensCommitedByMember[3] * tokenPriceETH).formatMoney(2, '.', ',')  + " Ξ"  );
+        
+
 }
 
 
@@ -251,7 +351,7 @@ function createNewMember() {
                 var referral = account;
 
                 try {
-                    myBitHandle.newMember(account, true, firstName, lastName, emailAddress, memberHash, defulatTokenAmount, referral, { from: adminAccount, gasPrice: gasPrice, gas: gasAmount });
+                    myBitHandle.newMember(account, firstName, lastName, emailAddress, memberHash, defulatTokenAmount, referral, { from: adminAccount, gasPrice: gasPrice, gas: gasAmount });
                 }
                 catch (err) {
                     displayExecutionError(err);
@@ -279,7 +379,7 @@ function createNewMember() {
                     web3.eth.sendTransaction({
                         from: adminAccount,
                         to: account,
-                        value: web3.toWei(10, "ether")
+                        value: web3.toWei(10000, "ether")
                     });
 
                     setTimeout(function () {
@@ -322,6 +422,8 @@ function checkBalance() {
     // var length = Object(myObj).length;
 
     //     exchangeFIAT = data.USD;
+
+    totalTokens = myBitHandle.tokensInCirculation();
 
     exchangeFIAT = 9.88;
 
@@ -614,7 +716,7 @@ function registerAsset() {
     var asset, member, cost;
 
     var assetSelected = $("#parm1").val();
-    var cost = $("#parm2").val();
+    var cost = Number($("#parm2").val()) * Math.pow(10,18);
 
     if (!handlePassword("areYouSure", 1)) return;
 
@@ -660,11 +762,35 @@ function registerAsset() {
 function handleInvestAsset(projectID){
 
     actionButton = document.getElementById("modal-action-areyousure");
-    actionButton.addEventListener('click', investAsset);
+    actionButton.addEventListener('click', investAsset );
 
-    $("#sure-mesasge").text("This action will invest your contribution in the selected project,, are you sure?");
+    $("#sure-mesasge").text("This action will invest your contribution in the selected project, are you sure?");
     $("#are-you-sure-title").text("Invest in this project")
     $("#modal-action-areyousure").text("Invest in project")
+    $("#pass-are-you-sure").val("");
+    $("#parm1").val(projectID);  
+    $("#areYouSure").modal();
+
+
+
+}
+
+/**
+ * This function will launch password window to allow return of profits for the project. 
+ * 
+ * @method handleReturnProfit 
+ * @param projectID {integer}
+ * 
+*/
+
+function handleReturnProfit(projectID){
+
+    actionButton = document.getElementById("modal-action-areyousure");
+    actionButton.addEventListener('click', returnProfit);
+
+    $("#sure-mesasge").text("This action will send profits into selected project, are you sure?");
+    $("#are-you-sure-title").text("Apply profits into this project")
+    $("#modal-action-areyousure").text("Return profits")
     $("#pass-are-you-sure").val("");
     $("#parm1").val(projectID);  
     $("#areYouSure").modal();
@@ -685,7 +811,7 @@ function investAsset() {
     var asset, member, cost;
 
     var projectID = $("#parm1").val();
-    var cost = $("#cost" + projectID).val();
+    var cost = Number($("#cost" + projectID).val()) * Math.pow(10,18);
 
     if (!handlePassword("areYouSure", 1)) return;
 
@@ -700,7 +826,7 @@ function investAsset() {
         ProjectInvestorLinked.watch(function (error, res) {           
 
 
-            message =  "You have invested  in project NO: " + projectID + " amount of " + cost + " ETH";
+            message =  "You have invested in project NO: " + projectID + " amount of " + cost / Math.pow(10,18) + " ETH";
             progressActionsAfter(message, true);
         });
     }, 10);
@@ -708,6 +834,42 @@ function investAsset() {
 
 }
 
+
+
+/**
+ * This function will interact with the blockchain to register contribution to investemnt.  
+ * 
+ * @method returnProfit 
+ * @param projectID {integer}
+ * 
+*/
+function returnProfit() {
+
+    var asset, member, amountReturned, investor;
+
+    var projectID = Number($("#parm1").val());
+    var amount = Number($("#cost" + projectID).val()) ;
+
+    if (!handlePassword("areYouSure", 1)) return;
+
+    progressActionsBefore();
+
+    setTimeout(function () {
+
+        myBitHandle.returnProfit(projectID,  currAccount , amount, { from: currAccount, gasPrice: gasPrice, gas: gasAmount });
+
+        var ProfitReturned= myBitHandle.ProfitsReturned({ projectID: projectID, Payee: member, amount:amountReturned, investor: investor});
+
+        ProfitReturned.watch(function (error, res) {           
+
+
+            message =  "You have returned  amount of " + amount  + " Tokens";
+            progressActionsAfter(message, true);
+        });
+    }, 10);
+
+
+}
 
 /**
  * This function will dispay assets and their investment status.   
@@ -747,8 +909,8 @@ function displayAssets(){
             
 
             var row = '<tr><td><div><img  style="height: 100px; width: 150px " src="../assets/img/' + image +' "></div></td>' +
-                      '<td>' + linkedAssets[2] + ' ETH</td>' +
-                      '<td>' + linkedAssets[3] + ' ETH</td>' +
+                      '<td>' + Number(linkedAssets[2]) / Math.pow(10,18) + ' ETH</td>' +
+                      '<td>' + Number(linkedAssets[3]) / Math.pow(10,18) + ' ETH</td>' +
                       '<td><div class="input-group "><span class="input-group-addon "><i class="material-icons "><money></money></i>' +
                       '</span><div class="form-group label-floating "><label class="control-label ">Contributed amount  (ETH)<small>(required)</small>' +
                       '</label><input class="form-control" id="cost'+i +'"  type="text" required="true " data-error="Bruh, that amount is invalid "' +
@@ -768,6 +930,66 @@ function displayAssets(){
 
 }
 
+
+
+/**
+ * This function will dispay assets and their investment status.   
+ * 
+ * @method displayAssets 
+ * @param projectID {integer}
+ * 
+*/
+
+function displayAssetsProfit(){
+
+    var image,  buyAmount;
+
+   var numberAssetsLinked = myBitHandle.numAssetLinks();
+
+     $("#assets-list").append('<tr id="header"><th>Asset</th><th>Cost</th><th>Contributed</th><th class="text-center">Profit Returned</th><th class="text-center"></th></tr>' );
+
+    for (var i=0; i<numberAssetsLinked; i++){
+
+           var linkedAssets =  myBitHandle.linkedMebersAndAssets(i)
+   
+            if (linkedAssets[1] == 0) {
+
+                image = "roofsolar-panels.jpg"  ;
+                buyAmount = "cost-roof";
+            }
+            else if(linkedAssets[1] == 1){
+                image = "siding-panels.jpg";
+                buyAmount = "cost-siding";
+            }
+            else {
+                 image = "driveway-panels.jpg";
+                buyAmount = "cost-driveway";
+            }
+
+                
+            
+
+            var row = '<tr><td><div><img  style="height: 100px; width: 150px " src="../assets/img/' + image +' "></div></td>' +
+                      '<td>' + Number(linkedAssets[2]) / Math.pow(10,18) + ' ETH</td>' +
+                      '<td>' + Number(linkedAssets[3]) / Math.pow(10,18) + ' ETH</td>' +
+                      '<td><div class="input-group "><span class="input-group-addon "><i class="material-icons "><money></money></i>' +
+                      '</span><div class="form-group label-floating "><label class="control-label ">Returned amount  (ETH)<small>(required)</small>' +
+                      '</label><input class="form-control" id="cost'+i +'"  type="text" required="true " data-error="Bruh, that amount is invalid "' +
+					  '/></div></div></td> <td><button class="btn btn-success btn-round " id="register'+i+'" onclick="handleReturnProfit('+i+')"><i class="material-icons ">' +
+                      'shop_two</i> Apply profits <div class="ripple-container "></div></button></td></tr>'
+
+          $("#assets-list").append(row);   
+          $("#cost" + i).val("");
+          //$("#" +buyAmount ).data("changed",true);
+
+         
+
+
+    }
+
+
+
+}
 
 /**
  * Function to handle member password
